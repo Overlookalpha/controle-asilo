@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Controle Asilo</title>
+<style>
+body {
+    font-family: Arial;
+    background: #0f2027;
+    color: white;
+    padding: 20px;
+}
+.container {
+    max-width: 400px;
+    margin: auto;
+}
+input, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: none;
+}
+button {
+    background: #00c853;
+    color: white;
+    font-weight: bold;
+}
+.item {
+    background: #203a43;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+.total {
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="total" id="total">Total: R$ 0,00</div>
+
+<input type="date" id="data">
+<input type="text" id="item" placeholder="Item enviado">
+<input type="number" id="valor" placeholder="Valor em R$">
+
+<button onclick="adicionar()">➕ Adicionar</button>
+
+<div id="lista"></div>
+
+</div>
+
+<script>
+
+let dados = JSON.parse(localStorage.getItem("dados")) || {};
+
+function mesAtual() {
+    let d = new Date();
+    return d.getFullYear() + "-" + (d.getMonth()+1);
+}
+
+function adicionar() {
+    let data = document.getElementById("data").value;
+    let item = document.getElementById("item").value;
+    let valor = parseFloat(document.getElementById("valor").value);
+
+    if (!data || !item || !valor) return;
+
+    let mes = mesAtual();
+
+    if (!dados[mes]) dados[mes] = [];
+
+    dados[mes].push({data, item, valor});
+
+    localStorage.setItem("dados", JSON.stringify(dados));
+
+    limpar();
+    render();
+}
+
+function limpar() {
+    document.getElementById("item").value = "";
+    document.getElementById("valor").value = "";
+}
+
+function render() {
+    let lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    let mes = mesAtual();
+    let total = 0;
+
+    if (dados[mes]) {
+        dados[mes].forEach(d => {
+            total += d.valor;
+
+            lista.innerHTML += `
+            <div class="item">
+                ${d.data} - ${d.item} <br>
+                R$ ${d.valor.toFixed(2)}
+            </div>`;
+        });
+    }
+
+    document.getElementById("total").innerText =
+        "Total: R$ " + total.toFixed(2);
+}
+
+render();
+
+</script>
+
+</body>
+</html>
