@@ -2,41 +2,81 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Controle Asilo</title>
 
 <style>
 body {
-    font-family: Arial;
-    background: #0f2027;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     color: white;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 420px;
+    margin: auto;
     padding: 20px;
 }
-.container {
-    max-width: 400px;
-    margin: auto;
+
+.card {
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    backdrop-filter: blur(10px);
 }
+
+.titulo {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.total {
+    text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+}
+
 input, button {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     margin-top: 10px;
-    border-radius: 8px;
+    border-radius: 10px;
     border: none;
+    font-size: 15px;
 }
+
+input {
+    background: #ffffff10;
+    color: white;
+}
+
 button {
     background: #00c853;
     color: white;
     font-weight: bold;
+    cursor: pointer;
 }
+
+button:active {
+    transform: scale(0.98);
+}
+
 .item {
-    background: #203a43;
-    padding: 10px;
+    background: rgba(255,255,255,0.08);
+    padding: 12px;
     margin-top: 10px;
-    border-radius: 8px;
+    border-radius: 10px;
 }
-.total {
-    font-size: 22px;
-    margin-bottom: 20px;
+
+.valor {
+    color: #00e676;
+    font-weight: bold;
 }
+
 </style>
 
 </head>
@@ -44,13 +84,17 @@ button {
 
 <div class="container">
 
-<div class="total" id="total">Total: R$ 0,00</div>
+<div class="card">
+    <div class="titulo" id="mes">📆 Mês</div>
+    <div class="total" id="total">💰 R$ 0,00</div>
+</div>
 
-<input type="date" id="data">
-<input type="text" id="item" placeholder="Item enviado">
-<input type="number" id="valor" placeholder="Valor em R$">
-
-<button onclick="adicionar()">➕ Adicionar</button>
+<div class="card">
+    <input type="date" id="data">
+    <input type="text" id="item" placeholder="🧾 Item enviado">
+    <input type="number" id="valor" placeholder="💰 Valor em R$">
+    <button onclick="adicionar()">➕ Adicionar</button>
+</div>
 
 <div id="lista"></div>
 
@@ -68,7 +112,6 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 🔥 TEU FIREBASE (já integrado)
 const firebaseConfig = {
   apiKey: "AIzaSyBj0SLLcTQbnbDXnZuI07SS_nb-nRwq_E",
   authDomain: "controle-asilo.firebaseapp.com",
@@ -81,13 +124,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 📅 mês atual
+// mês atual
 function mesAtual() {
     let d = new Date();
     return d.getFullYear() + "-" + (d.getMonth()+1);
 }
 
-// ➕ adicionar
+// adicionar
 window.adicionar = async function() {
     let data = document.getElementById("data").value;
     let item = document.getElementById("item").value;
@@ -106,18 +149,27 @@ window.adicionar = async function() {
     render();
 }
 
-// limpar campos
+// limpar
 function limpar() {
     document.getElementById("item").value = "";
     document.getElementById("valor").value = "";
 }
 
-// renderizar lista
+// render
 async function render() {
     let lista = document.getElementById("lista");
     lista.innerHTML = "";
 
     let total = 0;
+
+    // 📅 MÊS BONITO
+    const hoje = new Date();
+    const mesNome = hoje.toLocaleDateString('pt-BR', {
+        month: 'long',
+        year: 'numeric'
+    });
+
+    document.getElementById("mes").innerText = "📆 " + mesNome;
 
     const q = query(
         collection(db, "registros"),
@@ -131,15 +183,18 @@ async function render() {
 
         total += d.valor;
 
+        const dataFormatada = new Date(d.data).toLocaleDateString('pt-BR');
+
         lista.innerHTML += `
         <div class="item">
-            ${d.data} - ${d.item} <br>
-            R$ ${d.valor.toFixed(2)}
+            📅 ${dataFormatada}<br>
+            🧾 ${d.item}<br>
+            <span class="valor">💰 R$ ${d.valor.toFixed(2)}</span>
         </div>`;
     });
 
     document.getElementById("total").innerText =
-        "Total: R$ " + total.toFixed(2);
+        "💰 R$ " + total.toFixed(2);
 }
 
 render();
