@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Controle Asilo</title>
+
 <style>
 body {
     font-family: Arial;
@@ -37,6 +38,7 @@ button {
     margin-bottom: 20px;
 }
 </style>
+
 </head>
 <body>
 
@@ -54,57 +56,87 @@ button {
 
 </div>
 
-<script>
+<script type="module">
 
-let dados = JSON.parse(localStorage.getItem("dados")) || {};
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// 🔥 TEU FIREBASE (já integrado)
+const firebaseConfig = {
+  apiKey: "AIzaSyBj0SLLcTQbnbDXnZuI07SS_nb-nRwq_E",
+  authDomain: "controle-asilo.firebaseapp.com",
+  projectId: "controle-asilo",
+  storageBucket: "controle-asilo.appspot.com",
+  messagingSenderId: "345233964240",
+  appId: "1:345233964240:web:92bad2b915ebf3095972d5"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 📅 mês atual
 function mesAtual() {
     let d = new Date();
     return d.getFullYear() + "-" + (d.getMonth()+1);
 }
 
-function adicionar() {
+// ➕ adicionar
+window.adicionar = async function() {
     let data = document.getElementById("data").value;
     let item = document.getElementById("item").value;
     let valor = parseFloat(document.getElementById("valor").value);
 
     if (!data || !item || !valor) return;
 
-    let mes = mesAtual();
-
-    if (!dados[mes]) dados[mes] = [];
-
-    dados[mes].push({data, item, valor});
-
-    localStorage.setItem("dados", JSON.stringify(dados));
+    await addDoc(collection(db, "registros"), {
+        data,
+        item,
+        valor,
+        mes: mesAtual()
+    });
 
     limpar();
     render();
 }
 
+// limpar campos
 function limpar() {
     document.getElementById("item").value = "";
     document.getElementById("valor").value = "";
 }
 
-function render() {
+// renderizar lista
+async function render() {
     let lista = document.getElementById("lista");
     lista.innerHTML = "";
 
-    let mes = mesAtual();
     let total = 0;
 
-    if (dados[mes]) {
-        dados[mes].forEach(d => {
-            total += d.valor;
+    const q = query(
+        collection(db, "registros"),
+        where("mes", "==", mesAtual())
+    );
 
-            lista.innerHTML += `
-            <div class="item">
-                ${d.data} - ${d.item} <br>
-                R$ ${d.valor.toFixed(2)}
-            </div>`;
-        });
-    }
+    const snapshot = await getDocs(q);
+
+    snapshot.forEach(doc => {
+        let d = doc.data();
+
+        total += d.valor;
+
+        lista.innerHTML += `
+        <div class="item">
+            ${d.data} - ${d.item} <br>
+            R$ ${d.valor.toFixed(2)}
+        </div>`;
+    });
 
     document.getElementById("total").innerText =
         "Total: R$ " + total.toFixed(2);
